@@ -1,4 +1,4 @@
-name: deploy
+name: ci
 on: [ push, pull_request ]
 jobs:
   ci:
