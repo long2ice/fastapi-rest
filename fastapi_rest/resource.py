@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from tortoise import Model
 from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
+from tortoise.queryset import QuerySet
 
 from fastapi_rest.exceptions import ConfigurationError
 from fastapi_rest.pagination import Paginator
@@ -25,9 +26,12 @@ class Resource:
     create_model: Optional[Type[BaseModel]] = None
     update_model: Optional[Type[BaseModel]] = None
     fields: Optional[Tuple[str]] = None
+    exclude: Optional[Tuple[str]] = None
+    queryset: Optional[QuerySet] = None
 
     @classmethod
     def router(cls):
+        qs = cls.queryset or cls.model.all()
         model_name = cls.model.__name__
         name = cls.name or model_name.lower()
         router = APIRouter(prefix=f"/{name}", tags=[model_name])
@@ -38,7 +42,8 @@ class Resource:
             pager_model = cls.paginator.pager
             if cls.fields:
                 response_model = pydantic_queryset_creator(cls.model, include=cls.fields)
-
+            elif cls.exclude:
+                response_model = pydantic_queryset_creator(cls.model, exclude=cls.exclude)
             else:
                 response_model = pydantic_queryset_creator(cls.model)
 
@@ -48,7 +53,10 @@ class Resource:
                 page = getattr(pager, cls.paginator.page_name)
                 limit = size
                 offset = (page - 1) * size
-                return await cls.model.all().limit(limit).offset(offset)
+                if cls.fields:
+                    return await qs.only(*cls.fields).limit(limit).offset(offset)
+                else:
+                    return await qs.limit(limit).offset(offset)
 
         if Method.POST in cls.methods:
 
