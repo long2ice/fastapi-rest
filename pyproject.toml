@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "fastapi-rest"
+version = "0.1.0"
+description = ""
+authors = ["long2ice <long2ice@gmail.com>"]
+license = "Apache2.0"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+fastapi = "*"
+tortoise-orm = "*"
+
+[tool.poetry.dev-dependencies]
+# examples
+uvicorn = "*"
+asyncmy = "*"
+# test
+pytest = "*"
+pytest-asyncio = "*"
+pytest-mock = "*"
+pytest-xdist = "*"
+pytest-sugar = "*"
+# lint
+black = "*"
+flake8 = "*"
+isort = "*"
+mypy = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
