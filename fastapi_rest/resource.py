@@ -31,6 +31,21 @@ class ListView(Resource):
     fields: Optional[Tuple[str, ...]] = None
     exclude: Optional[Tuple[str, ...]] = None
     queryset: Optional[QuerySet] = None
+    query: Optional[Type[BaseModel]] = None
+
+    @classmethod
+    async def _router(cls, pager: BaseModel, query: Optional[BaseModel] = None):
+        qs = cls.queryset or cls.model.all()
+        if query:
+            qs = qs.filter(**query.dict(exclude_none=True))
+        size = getattr(pager, cls.paginator.size_name)
+        page = getattr(pager, cls.paginator.page_name)
+        limit = size
+        offset = (page - 1) * size
+        if cls.fields:
+            return await qs.only(*cls.fields).limit(limit).offset(offset)
+        else:
+            return await qs.limit(limit).offset(offset)
 
     @classmethod
     def as_router(cls):
@@ -42,18 +57,24 @@ class ListView(Resource):
             response_model = pydantic_queryset_creator(cls.model, exclude=cls.exclude)
         else:
             response_model = pydantic_queryset_creator(cls.model)
+        if cls.query:
 
-        @router.get("", summary=f"Get {cls.resource_name()} list", response_model=response_model)
-        async def _(pager: pager_model = Depends(pager_model)):
-            qs = cls.queryset or cls.model.all()
-            size = getattr(pager, cls.paginator.size_name)
-            page = getattr(pager, cls.paginator.page_name)
-            limit = size
-            offset = (page - 1) * size
-            if cls.fields:
-                return await qs.only(*cls.fields).limit(limit).offset(offset)
-            else:
-                return await qs.limit(limit).offset(offset)
+            @router.get(
+                "", summary=f"Get {cls.resource_name()} list", response_model=response_model
+            )
+            async def _(
+                pager: pager_model = Depends(pager_model),
+                query: Optional[BaseModel] = Depends(cls.query),
+            ):
+                return await cls._router(pager, query)
+
+        else:
+
+            @router.get(
+                "", summary=f"Get {cls.resource_name()} list", response_model=response_model
+            )
+            async def _(pager: pager_model = Depends(pager_model)):
+                return await cls._router(pager)
 
         return router
 
@@ -66,7 +87,7 @@ class DetailView(Resource):
     def as_router(cls):
         router = super(DetailView, cls).as_router()
 
-        @router.post(
+        @router.get(
             "/{pk}",
             summary=f"Get {cls.resource_name()} item",
             response_model=pydantic_model_creator(cls.model),
@@ -94,7 +115,7 @@ class CreateView(Resource):
             response_model=pydantic_model_creator(cls.model),
         )
         async def _(data: create_model):  # type:ignore
-            return await cls.model.create(**data.dict())  # type:ignore
+            return await cls.model.create(**data.dict(exclude_unset=True))  # type:ignore
 
         return router
 
@@ -109,7 +130,7 @@ class UpdateView(Resource):
         @router.put("/{pk}", summary=f"Update {cls.resource_name()}")
         async def _(pk: int, data: cls.schema):  # type:ignore
             obj = await cls.model.get(pk=pk)
-            return await obj.update_from_dict(data.dict()).save()
+            return await obj.update_from_dict(data.dict(exclude_unset=True)).save()
 
         return router
 

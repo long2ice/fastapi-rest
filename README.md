@@ -46,6 +46,7 @@ class ListView(Resource):
     fields: Optional[Tuple[str, ...]] = None
     exclude: Optional[Tuple[str, ...]] = None
     queryset: Optional[QuerySet] = None
+    query: Optional[Type[BaseModel]] = None
 ```
 
 ### DetailView

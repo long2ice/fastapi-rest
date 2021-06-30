@@ -6,7 +6,10 @@ from examples.resources import UserCreate, UserDelete, UserDetail, UserList, Use
 
 app = FastAPI()
 register_tortoise(
-    app, db_url="sqlite://:memory:", modules={"models": ["examples.models"]}, generate_schemas=True
+    app,
+    db_url="sqlite://:memory:",
+    modules={"models": ["examples.models"]},
+    generate_schemas=True,
 )
 app.include_router(UserList.as_router())
 app.include_router(UserCreate.as_router())

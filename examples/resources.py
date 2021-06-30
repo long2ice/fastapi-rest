@@ -11,9 +11,15 @@ class UserSchema(BaseModel):
     age: Optional[int]
 
 
+class UserQuery(BaseModel):
+    name: Optional[str]
+    age: Optional[int]
+
+
 class UserList(ListView):
     model = User
     fields = ("name", "age")
+    query = UserQuery
 
 
 class UserDetail(DetailView):

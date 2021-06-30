@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-rest"
-version = "0.1.0"
+version = "0.1.1"
 description = "Fast restful API based on FastAPI and TortoiseORM"
 authors = ["long2ice <long2ice@gmail.com>"]
 license = "Apache2.0"
@@ -24,6 +24,7 @@ tortoise-orm = "*"
 uvicorn = "*"
 asyncmy = "*"
 # test
+requests = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-mock = "*"
@@ -34,6 +35,8 @@ black = "*"
 flake8 = "*"
 isort = "*"
 mypy = "*"
+
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
